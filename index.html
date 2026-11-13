@@ -71,6 +71,15 @@
       <section class="card list-section">
         <div class="list-header">
           <h2>Incidencias Registradas</h2>
+          <div class="filter-group">
+            <label for="filterStatus">Filtrar por estado:</label>
+            <select id="filterStatus">
+              <option value="Todas" selected>Todas</option>
+              <option value="Abierta">Abierta</option>
+              <option value="En progreso">En progreso</option>
+              <option value="Resuelta">Resuelta</option>
+            </select>
+          </div>
           <span class="counter" id="totalCount">Total: 0</span>
         </div>
 
