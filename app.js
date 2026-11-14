@@ -1,10 +1,10 @@
 /**
  * Sistema de Registro de Incidencias
- * Versión Inicial: v1.0.0
- * Arquitectura base y gestión con LocalStorage
+ * Versión: v1.1.0
+ * Funcionalidad: Filtrado por estado de incidencias
  */
 
-const APP_VERSION = "v1.0.0";
+const APP_VERSION = "v1.1.0";
 
 document.addEventListener("DOMContentLoaded", () => {
   // Inicializar badge de versión
@@ -20,6 +20,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const issueForm = document.getElementById("issueForm");
   if (issueForm) {
     issueForm.addEventListener("submit", agregarIncidencia);
+  }
+
+  // Escuchar evento de cambio en el selector de filtro por estado
+  const filterStatus = document.getElementById("filterStatus");
+  if (filterStatus) {
+    filterStatus.addEventListener("change", cargarIncidencias);
   }
 });
 
@@ -93,15 +99,22 @@ function eliminarIncidencia(id) {
 }
 
 /**
- * Renderiza la lista de incidencias en el contenedor principal
+ * Renderiza la lista de incidencias en el contenedor principal según el filtro seleccionado
  */
 function cargarIncidencias() {
   const container = document.getElementById("issuesContainer");
   const totalCount = document.getElementById("totalCount");
+  const filterStatus = document.getElementById("filterStatus");
   const incidencias = obtenerIncidencias();
 
+  const estadoSeleccionado = filterStatus ? filterStatus.value : "Todas";
+
+  const incidenciasFiltradas = estadoSeleccionado === "Todas"
+    ? incidencias
+    : incidencias.filter(item => item.status === estadoSeleccionado);
+
   if (totalCount) {
-    totalCount.textContent = `Total: ${incidencias.length}`;
+    totalCount.textContent = `Total: ${incidenciasFiltradas.length}`;
   }
 
   if (!container) return;
@@ -116,7 +129,17 @@ function cargarIncidencias() {
     return;
   }
 
-  container.innerHTML = incidencias.map(item => `
+  if (incidenciasFiltradas.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state" style="text-align: center; padding: 2rem; color: #64748b;">
+        <p>No se encontraron incidencias con el estado "${escaparHTML(estadoSeleccionado)}".</p>
+        <small>Selecciona otro estado en el filtro o registra una nueva incidencia.</small>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = incidenciasFiltradas.map(item => `
     <div class="issue-item" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; background: #ffffff;">
       <div class="issue-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
         <div>
