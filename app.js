@@ -1,10 +1,10 @@
 /**
  * Sistema de Registro de Incidencias
- * Versión Inicial: v1.0.0
- * Arquitectura base y gestión con LocalStorage
+ * Versión: v1.1.1
+ * Bugfix: Validación de campos vacíos con .trim()
  */
 
-const APP_VERSION = "v1.0.0";
+const APP_VERSION = "v1.1.1";
 
 document.addEventListener("DOMContentLoaded", () => {
   // Inicializar badge de versión
