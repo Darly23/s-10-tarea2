@@ -52,8 +52,15 @@ function agregarIncidencia(e) {
   const priorityInput = document.getElementById("priority");
   const statusInput = document.getElementById("status");
 
-  const title = titleInput.value;
-  const description = descriptionInput.value;
+  const title = titleInput.value.trim();
+  const description = descriptionInput.value.trim();
+
+  // Validación con .trim(): no permitir campos vacíos ni con solo espacios en blanco
+  if (!title || !description) {
+    alert("Por favor, ingrese un título y una descripción válidos. No se permiten campos vacíos o con solo espacios en blanco.");
+    return;
+  }
+
   const priority = priorityInput.value;
   const status = statusInput.value;
 
