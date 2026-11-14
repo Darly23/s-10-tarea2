@@ -1,0 +1,86 @@
+name: CI/CD - Sistema de Registro de Incidencias
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  validar:
+    name: Validación automática de archivos (CI)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar código del repositorio
+        uses: actions/checkout@v4
+
+      - name: Verificar existencia e integridad de archivos base
+        run: |
+          test -s README.md || { echo "Error: README.md no existe o está vacío"; exit 1; }
+          test -s index.html || { echo "Error: index.html no existe o está vacío"; exit 1; }
+          test -s app.js || { echo "Error: app.js no existe o está vacío"; exit 1; }
+          if [ -f style.css ]; then
+            test -s style.css || { echo "Error: style.css existe pero está vacío"; exit 1; }
+            echo "style.css verificado correctamente."
+          else
+            echo "Aviso: style.css aún no se ha fusionado en esta rama."
+          fi
+
+      - name: Validar estructura básica de HTML
+        run: |
+          grep -qi "<!DOCTYPE html>" index.html || { echo "Error: Falta <!DOCTYPE html> en index.html"; exit 1; }
+          grep -qi "<html" index.html || { echo "Error: Falta etiqueta <html> en index.html"; exit 1; }
+          grep -qi "</html>" index.html || { echo "Error: Falta cierre </html> en index.html"; exit 1; }
+          grep -q 'src="app.js"' index.html || { echo "Error: index.html no referencia app.js"; exit 1; }
+          echo "Estructura HTML válida."
+
+      - name: Validar sintaxis de JavaScript
+        run: |
+          node --check app.js
+          echo "Sintaxis de app.js válida."
+
+  desplegar:
+    name: Despliegue continuo a GitHub Pages (CD)
+    needs: validar
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Descargar código del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Preparar archivos estáticos para publicación
+        run: |
+          mkdir -p _site
+          cp -f *.html *.js _site/
+          if ls *.css 1> /dev/null 2>&1; then
+            cp -f *.css _site/
+          fi
+
+      - name: Subir artefacto de GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "_site"
+
+      - name: Desplegar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
